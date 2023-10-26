@@ -2,7 +2,10 @@ package com.gabrielbento.mscreditevaluator.controller;
 
 import com.gabrielbento.mscreditevaluator.domain.entity.ClientSituation;
 import com.gabrielbento.mscreditevaluator.domain.service.CreditEvaluatorService;
+import com.gabrielbento.mscreditevaluator.exception.ClientDateNotFoundException;
+import com.gabrielbento.mscreditevaluator.exception.MicroserviceErrorCommunicationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +26,13 @@ public class CreditEvaluatorController {
 
     @GetMapping(value = "/customer-situation", params = {"cpf"})
     public ResponseEntity<ClientSituation> getClientSituation(@RequestParam("cpf") String cpf) {
-        ClientSituation clientSituation = creditEvaluatorService.getClientSituation(cpf);
-        return ResponseEntity.ok(clientSituation);
+        try{
+            ClientSituation clientSituation = creditEvaluatorService.getClientSituation(cpf);
+            return ResponseEntity.ok(clientSituation);
+        } catch (ClientDateNotFoundException clientDateNotFoundException){
+            return ResponseEntity.notFound().build();
+        } catch (MicroserviceErrorCommunicationException microserviceErrorCommunicationException){
+            return ResponseEntity.status(HttpStatus.resolve(microserviceErrorCommunicationException.getStatus())).build();
+        }
     }
 }
